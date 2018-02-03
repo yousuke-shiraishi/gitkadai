@@ -1,16 +1,17 @@
 class BlogsController < ApplicationController
-  before_action :set_blog, only: [:show, :edit, :update, :destroy]
+  before_action :login_validate, only: %i[new edit show]
+  before_action :set_blog, only: %i[show edit update destroy]
 
   # GET /blogs
   # GET /blogs.json
   def index
-    @blogs = Blog.all
+    @blogs = Blog.all.order(updated_at: :desc)
+    render layout: 'index.html.erb'
   end
 
   # GET /blogs/1
   # GET /blogs/1.json
-  def show
-  end
+  def show; end
 
   # GET /blogs/new
   def new
@@ -18,8 +19,7 @@ class BlogsController < ApplicationController
   end
 
   # GET /blogs/1/edit
-  def edit
-  end
+  def edit; end
 
   # POST /blogs
   # POST /blogs.json
@@ -62,13 +62,27 @@ class BlogsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_blog
-      @blog = Blog.find(params[:id])
-    end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def blog_params
-      params.require(:blog).permit(:title, :content)
+  # Use callbacks to share common setup or constraints between actions.
+  def set_blog
+    @blog = Blog.find(params[:id])
+  end
+
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def blog_params
+    params.require(:blog).permit(:title, :content)
+  end
+
+  def login_validate
+    #  if !logged_in?
+    #     redirect_to new_session_path
+    if session[:user_id]
+      begin
+        @user = User.find(session[:user_id])
+      rescue ActiveRecord::RecordNotFound
+        reset_session
+      end
     end
+    redirect_to new_session_path unless @user
+  end
 end
